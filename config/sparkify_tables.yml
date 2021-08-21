@@ -1,0 +1,56 @@
+staging_events:
+  create: |
+    CREATE TABLE IF NOT EXISTS {schema}.{table}(
+        event_id BIGINT IDENTITY PRIMARY KEY NOT NULL,
+        artist VARCHAR(255),
+        auth VARCHAR(255),
+        first_name VARCHAR(255),
+        gender VARCHAR (1),
+        item_in_session INT,
+        last_name VARCHAR(255),
+        length DOUBLE PRECISION,
+        level VARCHAR(255),
+        location VARCHAR(255),
+        method VARCHAR(30),
+        page VARCHAR(30),
+        registration VARCHAR(255),
+        session_id BIGINT,
+        song VARCHAR(255),
+        status INT,
+        ts VARCHAR(255),
+        user_agent VARCHAR(255),
+        user_id VARCHAR(255)
+    );
+  insert: |
+    COPY
+        {schema}.{table} 
+    FROM
+        '{s3_path}'
+    iam_role '{arn}'
+    json '{s3_log_json_path}';
+
+
+
+
+staging_songs:
+  create: |
+    CREATE TABLE IF NOT EXISTS {schema}.{table}(
+        song_id VARCHAR(255) PRIMARY KEY,
+        num_songs INT,
+        title VARCHAR(255),
+        artist_name VARCHAR(255),
+        artist_latitude DOUBLE PRECISION,
+        year INT,
+        duration DOUBLE PRECISION,
+        artist_id VARCHAR(255),
+        artist_longitude DOUBLE PRECISION,
+        artist_location VARCHAR(255)
+    );
+  insert: |
+    COPY
+        {schema}{table}
+    FROM
+        '{s3_path}'
+    iam_role '{arn}'
+    json 'auto';
+    

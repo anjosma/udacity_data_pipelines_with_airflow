@@ -1,0 +1,24 @@
+aws:
+  region: us-west-2
+  s3:
+    bucket: udacity-dend
+    log_data_key: log_data
+    song_data_key: song_data
+    LOG_JSONPATH: s3://udacity-dend/log_json_path.json
+  redshift:
+    database: dev
+    schema: public
+
+airflow:
+  description: Load and transform data in Redshift with Airflow
+  owner: Matheus Felipe dos Anzzjos
+  catchup: False
+  retry_on_failure: 3
+  retry_delay_in_minutes: 5
+  tags:
+    - udacity
+    - sparkify
+  schedule_interval: 0 * * * *
+
+  redshift_conn_id: redshift
+  aws_credentials_id: aws_credentials

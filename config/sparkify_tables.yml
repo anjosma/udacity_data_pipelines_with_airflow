@@ -110,13 +110,18 @@ songplays:
 
 artists:
   create: |
-    CREATE TABLE public.artists (
+    CREATE TABLE IF NOT EXISTS {schema}.{table} (
     artistid varchar(256) NOT NULL,
     name varchar(256),
     location varchar(256),
     lattitude numeric(18,0),
     longitude numeric(18,0)
     );
+  
+  insert: |
+    INSERT INTO {schema}.{table}
+    SELECT distinct artist_id, artist_name, artist_location, artist_latitude, artist_longitude
+    FROM staging_songs;
 
 
 
@@ -124,7 +129,7 @@ artists:
 
 songs:
   create: |
-    CREATE TABLE public.songs (
+    CREATE TABLE IF NOT EXISTS {schema}.{table} (
       songid varchar(256) NOT NULL,
       title varchar(256),
       artistid varchar(256),
@@ -133,12 +138,17 @@ songs:
       CONSTRAINT songs_pkey PRIMARY KEY (songid)
     );
 
+  insert: |
+    INSERT INTO {schema}.{table}
+    SELECT distinct song_id, title, artist_id, year, duration
+    FROM staging_songs;
+
 
 
 
 time:
   create: |
-    CREATE TABLE public."time" (
+    CREATE TABLE IF NOT EXISTS {schema}.{table} (
       start_time timestamp NOT NULL,
       "hour" int4,
       "day" int4,
@@ -148,17 +158,29 @@ time:
       weekday varchar(256),
       CONSTRAINT time_pkey PRIMARY KEY (start_time)
     );
+  
+  insert: |
+    INSERT INTO {schema}.{table}
+    SELECT start_time, extract(hour from start_time), extract(day from start_time), extract(week from start_time), 
+    extract(month from start_time), extract(year from start_time), extract(dayofweek from start_time)
+    FROM songplays;
 
 
 
 
 users:
   create: |
-    CREATE TABLE public.users (
-      userid int4 NOT NULL,
+    CREATE TABLE IF NOT EXISTS {schema}.{table} (
+      userid int8 NOT NULL,
       first_name varchar(256),
       last_name varchar(256),
       gender varchar(256),
       "level" varchar(256),
       CONSTRAINT users_pkey PRIMARY KEY (userid)
     );
+
+  insert: |
+    INSERT INTO {schema}.{table}
+    SELECT distinct userid, firstname, lastname, gender, level
+    FROM staging_events
+    WHERE page='NextSong';

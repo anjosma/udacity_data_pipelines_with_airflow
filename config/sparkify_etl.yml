@@ -9,6 +9,5 @@ aws:
     schema: public
 
 airflow:
-  dag_id: etl_pipeline_sparkify
   redshift_conn_id: redshift
   aws_credentials_id: aws_credentials

@@ -4,7 +4,7 @@ from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.subdag_operator import SubDagOperator
 
-from operators import (StageToRedshiftOperator, LoadFactOperator, LoadDimensionOperator, DataQualityOperator)
+from operators import (StageToRedshiftOperator, LoadFactOperator, DataQualityOperator)
 from subdag_dimension import load_dimension_subdag
 from helpers import load_yml_config
 import logging
@@ -28,7 +28,7 @@ S3_LOG_KEY = s3.get('log_data_key')
 S3_SONG_KEY = s3.get('song_data_key')
 AIRFLOW_REDSHIFT_CONNECTION = airflow.get('redshift_conn_id')
 AIRFLOW_AWS_CREDENTIALS = airflow.get('aws_credentials_id')
-AIFLOW_DAG_ID = airflow.get('dag_id')
+AIFLOW_DAG_ID = 'etl_pipeline_sparkify'
 
 # AWS_KEY = os.environ.get('AWS_KEY')
 # AWS_SECRET = os.environ.get('AWS_SECRET')
@@ -47,8 +47,7 @@ dag = DAG(AIFLOW_DAG_ID,
         default_args=default_args,
         description="Load and transform data in Redshift with Airflow",
         schedule_interval=None,
-        tags=airflow.get('tags'),
-        catchup=False
+        tags=['udacity', 'sparkify']
         )
 
 start_operator = DummyOperator(task_id='begin_execution',  dag=dag)
@@ -102,30 +101,14 @@ load_dimension_tables = SubDagOperator(
         redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
         schema=REDSHIFT_SCHEMA,
         dimension_tables=dim_tables,
-        config_tables=config_tables),
+        config_tables=config_tables,
+        default_args=default_args
+        ),
+    default_args=default_args,
     dag=dag
 )
 
 """
-load_user_dimension_table = LoadDimensionOperator(
-    task_id='load_user_dim_table',
-    dag=dag
-)
-
-load_song_dimension_table = LoadDimensionOperator(
-    task_id='load_song_dim_table',
-    dag=dag
-)
-
-load_artist_dimension_table = LoadDimensionOperator(
-    task_id='load_artist_dim_table',
-    dag=dag
-)
-
-load_time_dimension_table = LoadDimensionOperator(
-    task_id='load_time_dim_table',
-    dag=dag
-)
 
 run_quality_checks = DataQualityOperator(
     task_id='run_data_quality_checks',

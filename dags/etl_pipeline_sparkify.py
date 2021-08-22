@@ -30,18 +30,21 @@ AIRFLOW_AWS_CREDENTIALS = airflow.get('aws_credentials_id')
 # AWS_SECRET = os.environ.get('AWS_SECRET')
 
 default_args = {
-    'owner': airflow.get("owner"),
+    'owner': 'Matheus',
+    'depends_on_past': False,
+    'retries': 999,
+    'retry_delay': timedelta(minutes=1),
     'start_date': datetime(2019, 1, 12),
-    'catchup': airflow.get("catchup"),
-    'retry_on_failure': airflow.get('retry_on_failure'),
-    'retry_delay': timedelta(minutes=airflow.get('retry_delay_in_minutes'))
+    'email_on_retry': False,
+    'catchup': False,
 }
 
 dag = DAG('etl_pipeline_sparkify',
         default_args=default_args,
-        description=airflow.get('description'),
-        schedule_interval=airflow.get('schedule_interval'),
-        tags=airflow.get('tags')
+        description="Load and transform data in Redshift with Airflow",
+        schedule_interval=None,
+        tags=airflow.get('tags'),
+        catchup=False
         )
 
 start_operator = DummyOperator(task_id='begin_execution',  dag=dag)
@@ -56,12 +59,13 @@ stage_events_to_redshift = StageToRedshiftOperator(
     table=table,
     redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
     aws_credentials_id=AIRFLOW_AWS_CREDENTIALS,
+    region=REGION,
     table_queries=config_tables.get(table),
     dag=dag
 )
 
 
-table = 'staging_songs'
+table = 'staging_songs_1'
 stage_songs_to_redshift = StageToRedshiftOperator(
     task_id='stage_songs',
     s3_bucket=S3_BUCKET,
@@ -71,6 +75,7 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     table=table,
     redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
     aws_credentials_id=AIRFLOW_AWS_CREDENTIALS,
+    region=REGION,
     table_queries=config_tables.get(table),
     dag=dag
 )

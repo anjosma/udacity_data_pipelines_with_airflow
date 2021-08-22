@@ -21,18 +21,16 @@ staging_events:
         user_agent VARCHAR(255),
         user_id VARCHAR(255)
     );
-  insert: |
+  copy: |
     COPY
         {schema}.{table} 
     FROM
         '{s3_path}'
-    iam_role '{arn}'
-    json '{s3_log_json_path}';
-
-
-
-
-staging_songs:
+    ACCESS_KEY_ID '{aws_key}'
+    SECRET_ACCESS_KEY '{aws_secret}'
+    REGION '{region}'
+    json 's3://udacity-dend/log_json_path.json';
+staging_songs_1:
   create: |
     CREATE TABLE IF NOT EXISTS {schema}.{table}(
         song_id VARCHAR(255) PRIMARY KEY,
@@ -46,11 +44,12 @@ staging_songs:
         artist_longitude DOUBLE PRECISION,
         artist_location VARCHAR(255)
     );
-  insert: |
+  copy: |
     COPY
-        {schema}{table}
+        {schema}.{table}
     FROM
         '{s3_path}'
-    iam_role '{arn}'
+    ACCESS_KEY_ID '{aws_key}'
+    SECRET_ACCESS_KEY '{aws_secret}'
+    REGION '{region}'
     json 'auto';
-    

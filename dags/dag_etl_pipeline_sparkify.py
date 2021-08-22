@@ -2,8 +2,11 @@ from datetime import datetime, timedelta
 import os
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.subdag_operator import SubDagOperator
+
 from operators import (StageToRedshiftOperator, LoadFactOperator, LoadDimensionOperator, DataQualityOperator)
-from helpers import SqlQueries, load_yml_config
+from subdag_dimension import load_dimension_subdag
+from helpers import load_yml_config
 import logging
 
 config_path = os.path.join("config", 'sparkify_etl.yml')
@@ -25,6 +28,7 @@ S3_LOG_KEY = s3.get('log_data_key')
 S3_SONG_KEY = s3.get('song_data_key')
 AIRFLOW_REDSHIFT_CONNECTION = airflow.get('redshift_conn_id')
 AIRFLOW_AWS_CREDENTIALS = airflow.get('aws_credentials_id')
+AIFLOW_DAG_ID = airflow.get('dag_id')
 
 # AWS_KEY = os.environ.get('AWS_KEY')
 # AWS_SECRET = os.environ.get('AWS_SECRET')
@@ -39,7 +43,7 @@ default_args = {
     'catchup': False,
 }
 
-dag = DAG('etl_pipeline_sparkify',
+dag = DAG(AIFLOW_DAG_ID,
         default_args=default_args,
         description="Load and transform data in Redshift with Airflow",
         schedule_interval=None,
@@ -51,10 +55,9 @@ start_operator = DummyOperator(task_id='begin_execution',  dag=dag)
 
 table = 'staging_events'
 stage_events_to_redshift = StageToRedshiftOperator(
-    task_id='stage_events',
+    task_id='stage_events' ,
     s3_bucket=S3_BUCKET,
     s3_key=S3_LOG_KEY,
-    database=REDSHIFT_DATABASE,
     schema=REDSHIFT_SCHEMA,
     table=table,
     redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
@@ -70,7 +73,6 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     task_id='stage_songs',
     s3_bucket=S3_BUCKET,
     s3_key=S3_SONG_KEY,
-    database=REDSHIFT_DATABASE,
     schema=REDSHIFT_SCHEMA,
     table=table,
     redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
@@ -83,13 +85,24 @@ stage_songs_to_redshift = StageToRedshiftOperator(
 table = 'songplays'
 load_songplays_table = LoadFactOperator(
     task_id='load_songplays_fact_table',
-    database=REDSHIFT_DATABASE,
     schema=REDSHIFT_SCHEMA,
     table=table,
     redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
-    region=REGION,
     insert_query=config_tables.get(table).get('insert'),
     create_query=config_tables.get(table).get('create'),
+    dag=dag
+)
+
+dim_tables = ['users', 'songs', 'time', 'artists']
+load_dimension_tables = SubDagOperator(
+    task_id='load_dimension_tables',
+    subdag=load_dimension_subdag(
+        parent_dag=AIFLOW_DAG_ID, 
+        child_dag='load_dimension_tables',
+        redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
+        schema=REDSHIFT_SCHEMA,
+        dimension_tables=dim_tables,
+        config_tables=config_tables),
     dag=dag
 )
 
@@ -123,5 +136,5 @@ end_operator = DummyOperator(task_id='stop_execution',  dag=dag)
 """
 
 start_operator >> [stage_events_to_redshift, stage_songs_to_redshift] >> load_songplays_table
-#load_songplays_table >> [load_song_dimension_table, load_artist_dimension_table, load_user_dimension_table, load_time_dimension_table] >> run_quality_checks
+load_songplays_table >> load_dimension_tables
 #run_quality_checks >> end_operator

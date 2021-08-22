@@ -9,17 +9,6 @@ aws:
     schema: public
 
 airflow:
-  description: Load and transform data in Redshift with Airflow
-  owner: Matheus Felipe dos Anjos
-  catchup: False
-  email_on_retry: False
-  depends_on_past: False
-  retry_on_failure: 3
-  retry_delay_in_minutes: 5
-  tags:
-    - udacity
-    - sparkify
-  schedule_interval: 0 * * * *
-
+  dag_id: etl_pipeline_sparkify
   redshift_conn_id: redshift
   aws_credentials_id: aws_credentials

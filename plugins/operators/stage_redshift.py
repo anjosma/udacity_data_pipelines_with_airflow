@@ -12,7 +12,6 @@ class StageToRedshiftOperator(BaseOperator):
     def __init__(self,
                 s3_bucket: str,
                 s3_key: str,
-                database: str,
                 schema: str,
                 table: str,
                 redshift_conn_id: str,
@@ -24,7 +23,6 @@ class StageToRedshiftOperator(BaseOperator):
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
         self.s3_bucket = s3_bucket
         self.s3_key = s3_key
-        self.database = database
         self.schema = schema
         self.table = table
         self.redshift_conn_id = redshift_conn_id

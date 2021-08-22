@@ -5,15 +5,13 @@ from airflow.utils.decorators import apply_defaults
 class LoadFactOperator(BaseOperator):
 
     ui_color = '#F98866'
-    template_fields = ('database', 'schema', 'table', 'redshift_conn_id', 'region', 'insert_query', 'create_query')
+    template_fields = ('schema', 'table', 'redshift_conn_id', 'region', 'insert_query', 'create_query')
 
     @apply_defaults
     def __init__(self,
-                database,
                 schema,
                 table,
                 redshift_conn_id,
-                region,
                 insert_query,
                 create_query,
                 *args,
@@ -21,11 +19,9 @@ class LoadFactOperator(BaseOperator):
 
         super(LoadFactOperator, self).__init__(*args, **kwargs)
         
-        self.database = database
         self.schema = schema
         self.table = table
         self.redshift_conn_id = redshift_conn_id
-        self.region = region
         self.insert_query = insert_query
         self.create_query = create_query
 

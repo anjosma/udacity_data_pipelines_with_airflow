@@ -27,6 +27,7 @@ def load_dimension_subdag(
             table=table,
             create_query=create_query,
             insert_query=insert_query,
+            dag=dag
         )
 
     return dag

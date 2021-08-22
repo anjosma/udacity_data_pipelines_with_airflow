@@ -40,9 +40,6 @@ class StageToRedshiftOperator(BaseOperator):
         s3_hook = S3Hook(aws_conn_id=self.aws_credentials_id)
         credentials = s3_hook.get_credentials()
 
-        self.log.info(credentials)
-        self.log.info(self.table_queries)
-
         create_query = self.table_queries.get("create").format(schema=self.schema, table=self.table)
         truncate_query = f"TRUNCATE {self.schema}.{self.table};"
         copy_query = self.table_queries.get("copy").format(schema=self.schema, table=self.table, s3_path=s3_path,

@@ -34,7 +34,7 @@ default_args = {
     'depends_on_past': False,
     'retries': 999,
     'retry_delay': timedelta(minutes=1),
-    'start_date': datetime(2019, 1, 12),
+    'start_date': datetime(2018, 11, 1),
     'email_on_retry': False,
     'catchup': False,
 }
@@ -65,7 +65,7 @@ stage_events_to_redshift = StageToRedshiftOperator(
 )
 
 
-table = 'staging_songs_1'
+table = 'staging_songs'
 stage_songs_to_redshift = StageToRedshiftOperator(
     task_id='stage_songs',
     s3_bucket=S3_BUCKET,
@@ -80,12 +80,20 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     dag=dag
 )
 
-"""
+table = 'songplays'
 load_songplays_table = LoadFactOperator(
     task_id='load_songplays_fact_table',
+    database=REDSHIFT_DATABASE,
+    schema=REDSHIFT_SCHEMA,
+    table=table,
+    redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
+    region=REGION,
+    insert_query=config_tables.get(table).get('insert'),
+    create_query=config_tables.get(table).get('create'),
     dag=dag
 )
 
+"""
 load_user_dimension_table = LoadDimensionOperator(
     task_id='load_user_dim_table',
     dag=dag
@@ -114,6 +122,6 @@ run_quality_checks = DataQualityOperator(
 end_operator = DummyOperator(task_id='stop_execution',  dag=dag)
 """
 
-start_operator >> [stage_events_to_redshift, stage_songs_to_redshift] #>> load_songplays_table
+start_operator >> [stage_events_to_redshift, stage_songs_to_redshift] >> load_songplays_table
 #load_songplays_table >> [load_song_dimension_table, load_artist_dimension_table, load_user_dimension_table, load_time_dimension_table] >> run_quality_checks
 #run_quality_checks >> end_operator

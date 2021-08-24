@@ -3,6 +3,7 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class LoadDimensionOperator(BaseOperator):
+    """Airflow Operator which creates Dimension tables in DataWarehouse"""
 
     ui_color = '#80BD9E'
     template_fields = ('schema', 'table', 'redshift_conn_id', 'insert_query', 'create_query')

@@ -31,14 +31,12 @@ AIRFLOW_REDSHIFT_CONNECTION = airflow.get('redshift_conn_id')
 AIRFLOW_AWS_CREDENTIALS = airflow.get('aws_credentials_id')
 AIFLOW_DAG_ID = 'etl_pipeline_sparkify'
 
-# AWS_KEY = os.environ.get('AWS_KEY')
-# AWS_SECRET = os.environ.get('AWS_SECRET')
 
 default_args = {
     'owner': 'Matheus',
     'depends_on_past': False,
-    'retries': 999,
-    'retry_delay': timedelta(minutes=1),
+    'retries': 3,
+    'retry_delay': timedelta(minutes=5),
     'start_date': datetime(2018, 11, 1),
     'email_on_retry': False,
     'catchup': False,
@@ -126,7 +124,6 @@ run_quality_checks = SubDagOperator(
 )
 
 end_operator = DummyOperator(task_id='stop_execution', dag=dag)
-
 
 start_operator >> [stage_events_to_redshift, stage_songs_to_redshift] >> load_songplays_table
 load_songplays_table >> load_dimension_tables >> run_quality_checks >> end_operator

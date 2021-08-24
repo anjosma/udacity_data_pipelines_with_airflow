@@ -4,6 +4,7 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class StageToRedshiftOperator(BaseOperator):
+    """Operator responsible to transfer data in S3 to Redshift"""
     ui_color = '#358140'
     template_fields = ('s3_bucket', 's3_key', 'table', 'table_queries')
 

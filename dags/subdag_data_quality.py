@@ -12,7 +12,20 @@ def check_tables_subdag(
     default_args: dict,
     *args,
     **kwargs
-    ):
+    ) -> DAG:
+    """Creates tasks to check Data Quality in listed table passed in `check_tables`
+
+    Args:
+        parent_dag (str): Parent Dag Name
+        child_dag (str): Child Dag Name
+        redshift_conn_id (str): Redshift connection ID created in Airflow Connections
+        schema (str): Name of schema in database 
+        check_tables (List[str]): List of tables to check in `DataQualityOperator`
+        default_args (dict): Dict containing default arguments of Parent Dag
+
+    Returns:
+        DAG: Airflow DAG Object with tasks created in Child Dag
+    """
 
     dag = DAG(
         dag_id=f"{parent_dag}.{child_dag}",

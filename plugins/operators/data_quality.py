@@ -3,15 +3,16 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class DataQualityOperator(BaseOperator):
+    """Operator responsible to check quality of created tables"""
 
     ui_color = '#89DA59'
     template_fields = ('schema', 'table')
 
     @apply_defaults
     def __init__(self,
-                schema,
-                table,
-                redshift_conn_id,
+                schema: str,
+                table: str,
+                redshift_conn_id: str,
                 *args, 
                 **kwargs):
 

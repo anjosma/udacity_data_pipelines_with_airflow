@@ -3,6 +3,7 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class LoadFactOperator(BaseOperator):
+    """Operator responsible for creates Fact table in DataWarehouse"""
 
     ui_color = '#F98866'
     template_fields = ('schema', 'table', 'redshift_conn_id', 'insert_query', 'create_query')

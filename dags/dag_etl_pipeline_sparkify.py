@@ -6,6 +6,7 @@ from airflow.operators.subdag_operator import SubDagOperator
 
 from operators import (StageToRedshiftOperator, LoadFactOperator, DataQualityOperator)
 from subdag_dimension import load_dimension_subdag
+from subdag_data_quality import check_tables_subdag
 from helpers import load_yml_config
 import logging
 
@@ -108,16 +109,24 @@ load_dimension_tables = SubDagOperator(
     dag=dag
 )
 
-"""
 
-run_quality_checks = DataQualityOperator(
+check_tables = ['users', 'songs', 'time', 'artists', 'songplays']
+run_quality_checks = SubDagOperator(
     task_id='run_data_quality_checks',
+    subdag=check_tables_subdag(
+        parent_dag=AIFLOW_DAG_ID, 
+        child_dag='run_data_quality_checks',
+        redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
+        schema=REDSHIFT_SCHEMA,
+        check_tables=check_tables,
+        default_args=default_args
+    ),
+    default_args=default_args,
     dag=dag
 )
 
-end_operator = DummyOperator(task_id='stop_execution',  dag=dag)
-"""
+end_operator = DummyOperator(task_id='stop_execution', dag=dag)
+
 
 start_operator >> [stage_events_to_redshift, stage_songs_to_redshift] >> load_songplays_table
-load_songplays_table >> load_dimension_tables
-#run_quality_checks >> end_operator
+load_songplays_table >> load_dimension_tables >> run_quality_checks >> end_operator

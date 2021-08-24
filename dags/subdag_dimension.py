@@ -1,7 +1,5 @@
 from typing import List
 
-import datetime
-
 from airflow import DAG
 from operators import (LoadDimensionOperator)
 
@@ -25,7 +23,6 @@ def load_dimension_subdag(
         create_query = config_tables.get(table).get('create')
         insert_query = config_tables.get(table).get('insert')
 
-        loads = []
         load_dimension = LoadDimensionOperator(
             task_id=f"load_{table}_dim_table",
             redshift_conn_id=redshift_conn_id,
@@ -35,6 +32,5 @@ def load_dimension_subdag(
             insert_query=insert_query,
             dag=dag
         )
-        loads.append(load_dimension)
 
     return dag

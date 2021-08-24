@@ -6,7 +6,6 @@ from airflow.utils.decorators import apply_defaults
 class StageToRedshiftOperator(BaseOperator):
     ui_color = '#358140'
     template_fields = ('s3_bucket', 's3_key', 'table', 'table_queries')
-    copy = 'select * from abc' 
 
     @apply_defaults
     def __init__(self,

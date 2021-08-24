@@ -68,4 +68,6 @@ $ docker-compose up airflow-init
 $ docker-compose up
 ```
 
-## Configuration
+### Airflow UI
+Access the http://localhost:8080/ in your machine and you will be able to see the Airflow UI and navigate through the created DAG for this project, called `etl_pipeline_sparkify`.
+![dag](img/dag.png)

@@ -8,7 +8,7 @@ def check_tables_subdag(
     child_dag: str,
     redshift_conn_id: str,
     schema: str,
-    check_tables: List[str],
+    config_quality: dict,
     default_args: dict,
     *args,
     **kwargs
@@ -31,12 +31,13 @@ def check_tables_subdag(
         dag_id=f"{parent_dag}.{child_dag}",
         default_args=default_args, **kwargs)
 
-    for table in check_tables:
+    for table in config_quality:
 
         check_table = DataQualityOperator(
             task_id=f"check_{table}_table",
             redshift_conn_id=redshift_conn_id,
             schema=schema,
+            test_queries=config_quality.get(table),
             table=table,
             dag=dag
         )

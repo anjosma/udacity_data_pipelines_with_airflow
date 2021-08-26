@@ -1,0 +1,17 @@
+users:
+  - user_id_null: 
+      query: SELECT COUNT(*) FROM users WHERE userid is null
+      expected_result: 0
+
+songplays:
+  - songid_artistid:
+      query: SELECT COUNT(*) FROM songplays WHERE songid is null AND artistid is null
+      expected_result: 0
+
+songs:
+  - year_zero:
+      query: SELECT COUNT(*) FROM songs WHERE year=0 
+      expected_result: 0
+  - song_id_null:
+      query: SELECT COUNT(*) FROM songs WHERE songid is null
+      expected_result: 0

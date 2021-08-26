@@ -12,8 +12,10 @@ import logging
 
 config_path = os.path.join("config", 'sparkify_etl.yml')
 config_tables_path = os.path.join("config", 'sparkify_tables.yml')
+config_data_quality_path = os.path.join("config", 'sparkify_data_quality.yml')
 config = load_yml_config(config_path)
 config_tables = load_yml_config(config_tables_path)
+config_quality = load_yml_config(config_data_quality_path)
 
 logging.info("Loaded YML config file for S3, Redshift and Airflow.")
 
@@ -108,7 +110,6 @@ load_dimension_tables = SubDagOperator(
 )
 
 
-check_tables = ['users', 'songs', 'time', 'artists', 'songplays']
 run_quality_checks = SubDagOperator(
     task_id='run_data_quality_checks',
     subdag=check_tables_subdag(
@@ -116,7 +117,7 @@ run_quality_checks = SubDagOperator(
         child_dag='run_data_quality_checks',
         redshift_conn_id=AIRFLOW_REDSHIFT_CONNECTION,
         schema=REDSHIFT_SCHEMA,
-        check_tables=check_tables,
+        config_quality=config_quality,
         default_args=default_args
     ),
     default_args=default_args,

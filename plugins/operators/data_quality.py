@@ -6,13 +6,14 @@ class DataQualityOperator(BaseOperator):
     """Operator responsible to check quality of created tables"""
 
     ui_color = '#89DA59'
-    template_fields = ('schema', 'table')
+    template_fields = ('schema', 'table', 'test_queries')
 
     @apply_defaults
     def __init__(self,
                 schema: str,
                 table: str,
                 redshift_conn_id: str,
+                test_queries: list,
                 *args, 
                 **kwargs):
 
@@ -21,18 +22,19 @@ class DataQualityOperator(BaseOperator):
         self.schema = schema
         self.table = table
         self.redshift_conn_id = redshift_conn_id
-        self.check_query = "SELECT COUNT(*) FROM {schema}.{table}"
+        self.test_queries = test_queries
+
+    def __check_quality(self, rule, check_query):
+        self.log.info(check_query)
+        records = self.postgres_hook.get_records(check_query.get('query'))
+        n_records = records[0][0]
+        if n_records != check_query.get('expected_result'):
+            raise ValueError(f"Error: Table {self.table} returns not expected result from rule {rule}")
+        self.log.info(f"Passed: Table {self.table} contains {n_records} records")
 
     def execute(self, context):
-        postgres_hook = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-
-        check_query = self.check_query.format(schema=self.schema, table=self.table)
-
-        records = postgres_hook.get_records(check_query)
-
-        if len(records) < 1 or len(records[0]) < 1:
-            raise ValueError(f"Data quality check failed. {self.table} returned no results")
-        num_records = records[0][0]
-        if num_records < 1:
-            raise ValueError(f"Data quality check failed. {self.table} contained 0 rows")
-        self.log.info(f"Data quality on table {self.table} check passed with {records[0][0]} records")
+        self.postgres_hook = PostgresHook(postgres_conn_id=self.redshift_conn_id)
+        for quality_test in self.test_queries:
+            rule = list(quality_test.keys())[0]
+            self.__check_quality(rule, quality_test.get(rule))
+        [self.__check_quality(quality_test.get()) for quality_test in self.test_queries]
